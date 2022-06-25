@@ -5,8 +5,9 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
 
-private const val BASE_URL = "api.tomtom.com/"
+private const val BASE_URL = "https://api.tomtom.com/"
 
 private val moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -19,7 +20,7 @@ private val retrofit = Retrofit.Builder()
 
 interface TomTomService{
     @GET("search/2/nearbySearch/.json")
-    suspend fun getNearbyData() : List<NearbyData>
+    suspend fun getNearbyData(@Query("key") key : String, @Query("lat") lat: Double, @Query("lon") lon: Double) : NearbyData
 }
 
 object TomTomAPI{
