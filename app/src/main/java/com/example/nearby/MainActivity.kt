@@ -7,19 +7,16 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.service.autofill.OnClickAction
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,24 +28,27 @@ import com.google.android.gms.location.LocationServices
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat.startActivity
+import androidx.navigation.compose.rememberNavController
 import com.example.nearby.network.NearbyData
+import com.example.nearby.network.Results
 import com.example.nearby.viewmodel.Key
 import com.example.nearby.viewmodel.OverviewViewModel
 import com.example.nearby.viewmodel.TomTomStat
 
 class MainActivity : ComponentActivity() {
     val viewModel = OverviewViewModel()
+    val key : Key = Key("AIzaSyDdPjIKXzWueeY-_ZT9Y86IgHoQ5lau-LY")
 
     private lateinit var fusedLocProviderClient : FusedLocationProviderClient
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         fusedLocProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        val lonLat: LongLat = getCurLocation(viewModel)
+        val lonLat: LongLat = getCurLocation(viewModel, key)
         println("LONG: ${lonLat.long} \n LAT: ${lonLat.lat} ")
 
         setContent {
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
 
     }
-    private fun getCurLocation(viewModel : OverviewViewModel) : LongLat {
+    private fun getCurLocation(viewModel : OverviewViewModel, key: Key) : LongLat {
          var lon = 0.0
          var lat = 0.0
 
@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         Toast.makeText(this, "Received NULL!", Toast.LENGTH_SHORT).show()
                     }else{
                         Toast.makeText(this, "RECEIVED!", Toast.LENGTH_SHORT).show()
-                        viewModel.onLocationChange(location, key = Key("AIzaSyDdPjIKXzWueeY-_ZT9Y86IgHoQ5lau-LY"))
+                        viewModel.onLocationChange(location, key = key)
                         println("LONG: ${location.longitude} \n LAT: ${location.latitude}")
                     }
 
@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
         if(requestCode == PERMISSION_REQ_ACCESS_LOC){
             if(grantResults.isNotEmpty() && grantResults[0]==PackageManager.PERMISSION_GRANTED){
                 Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
-                getCurLocation(viewModel = viewModel)
+                getCurLocation(viewModel = viewModel, key)
             }else{
                 Toast.makeText(applicationContext, "Denied!", Toast.LENGTH_SHORT).show()
 
@@ -173,16 +173,6 @@ fun MyApp(content: @Composable ()-> Unit){
 }
 
 @Composable
-fun EachItem(loc: LongLat){
-    Column() {
-        Text("LONG: ${loc.long}", color = MaterialTheme.colors.primary,
-            modifier = Modifier.padding(8.dp))
-        Text("LAT: ${loc.lat}", color = MaterialTheme.colors.primary,
-            modifier = Modifier.padding(8.dp))
-    }
-}
-
-@Composable
 fun ModelHolder(viewModel: OverviewViewModel){
     val places : NearbyData? by viewModel.nearbyPlace.observeAsState()
     val stat : TomTomStat? by viewModel.status.observeAsState()
@@ -209,7 +199,7 @@ fun NearbyDataHolder(modifier: Modifier = Modifier, data : NearbyData?, status: 
 fun ShowResponse(places: NearbyData?){
     LazyColumn{
         items(items = places?.results?:listOf()){
-            Text(text = it.poi.name)
+            EachItem(place = it)
         }
     }
 }
@@ -222,6 +212,28 @@ fun ShowError(){
 @Composable
 fun ShowLoading(){
     CircularProgressIndicator()
+}
+
+@Composable
+fun EachItem(place : Results){
+    val mContext = LocalContext.current
+
+    Box(Modifier.clickable {
+        val navigate = Intent(mContext, MainActivity2::class.java )
+        mContext.startActivity(navigate)
+
+    }) {
+
+        Column(modifier = Modifier
+            .height(80.dp)
+            .padding(8.dp)) {
+            Text(place.poi.name)
+        }
+
+    }
+
+
+
 }
 
 
