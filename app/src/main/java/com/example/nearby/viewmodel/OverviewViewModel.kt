@@ -36,10 +36,8 @@ class OverviewViewModel : ViewModel(){
 
                 _status.value = TomTomStat.DONE
             }catch(e:Exception){
-                println(e.message)
                 _status.value = TomTomStat.ERROR
                 _nearbyPlace.value = NearbyData(results = listOf())
-
             }
         }
     }
