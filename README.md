@@ -12,7 +12,7 @@
 #### _Exceptions:_
 * On access denied, users location can't be fetched, thus the application flow stops here with a toast notification, indicating that the access was not granted
 
-*On access granted, if anything was wrong with the api request, an ERROR text will be shown on the screen after the progress indicator
+* On access granted, if anything was wrong with the api request, an ERROR text will be shown on the screen after the progress indicator
 
 #### _Tools, Libraries and Architecture:_
 
