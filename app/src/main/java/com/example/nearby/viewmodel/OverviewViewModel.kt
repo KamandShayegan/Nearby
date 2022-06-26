@@ -33,7 +33,7 @@ class OverviewViewModel : ViewModel(){
             _status.value = TomTomStat.LOADING
             try{
                 _nearbyPlace.value = TomTomAPI.retrofitService.getNearbyData(key = key.key, lat = location.latitude, lon = location.longitude)
-
+                println(_nearbyPlace.value)
                 _status.value = TomTomStat.DONE
             }catch(e:Exception){
                 _status.value = TomTomStat.ERROR

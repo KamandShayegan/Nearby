@@ -14,6 +14,13 @@ import com.example.nearby.ui.theme.NearbyTheme
 
 class MainActivity2 : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val bundle :Bundle ?=intent.extras
+        var name : String? = bundle?.getString("name")
+        var score : String? = bundle?.getString("score")
+
+        println("NAME: $name \n SCORE: $score")
+
         super.onCreate(savedInstanceState)
         setContent {
             NearbyTheme {

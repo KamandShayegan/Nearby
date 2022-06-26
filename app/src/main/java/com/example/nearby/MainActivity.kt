@@ -11,11 +11,14 @@ import android.service.autofill.OnClickAction
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -28,18 +31,26 @@ import com.google.android.gms.location.LocationServices
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.compose.rememberNavController
 import com.example.nearby.network.NearbyData
-import com.example.nearby.network.Results
+import com.example.nearby.network.Result
 import com.example.nearby.viewmodel.Key
 import com.example.nearby.viewmodel.OverviewViewModel
 import com.example.nearby.viewmodel.TomTomStat
 
 class MainActivity : ComponentActivity() {
     val viewModel = OverviewViewModel()
-    val key : Key = Key("AIzaSyDdPjIKXzWueeY-_ZT9Y86IgHoQ5lau-LY")
+    val key : Key = Key("DWHwqxBRthz7COQVzQNGxJSfQ4gU7Quk")
 
     private lateinit var fusedLocProviderClient : FusedLocationProviderClient
 
@@ -48,12 +59,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         fusedLocProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        val lonLat: LongLat = getCurLocation(viewModel, key)
-        println("LONG: ${lonLat.long} \n LAT: ${lonLat.lat} ")
+        getCurLocation(viewModel, key)
 
         setContent {
             MyApp {
-                    ModelHolder(viewModel)
+                    ScreenContent(viewModel)
             }
         }
 
@@ -62,10 +72,7 @@ class MainActivity : ComponentActivity() {
 
 
     }
-    private fun getCurLocation(viewModel : OverviewViewModel, key: Key) : LongLat {
-         var lon = 0.0
-         var lat = 0.0
-
+    private fun getCurLocation(viewModel : OverviewViewModel, key: Key){
         if(checkPermissions()){
             if(isLocationEnabled()){
                 //final long and lat
@@ -78,15 +85,14 @@ class MainActivity : ComponentActivity() {
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     requestPermission()
-                    return LongLat(0.0, 0.0)
                 }
 
                 fusedLocProviderClient.lastLocation.addOnCompleteListener(this){ task ->
                     val location = task.result
                     if(location == null){
-                        Toast.makeText(this, "Received NULL!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Failed to fetch location!", Toast.LENGTH_SHORT).show()
                     }else{
-                        Toast.makeText(this, "RECEIVED!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Location Received", Toast.LENGTH_SHORT).show()
                         viewModel.onLocationChange(location, key = key)
                         println("LONG: ${location.longitude} \n LAT: ${location.latitude}")
                     }
@@ -95,8 +101,8 @@ class MainActivity : ComponentActivity() {
                 }
 
             }else{
-                //setting open here
-                Toast.makeText(this, "Turn on location", Toast.LENGTH_SHORT).show()
+                //open here
+                Toast.makeText(this, "Please turn on your location", Toast.LENGTH_SHORT).show()
                 val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 startActivity(intent)
             }
@@ -105,7 +111,6 @@ class MainActivity : ComponentActivity() {
             //request permission here
             requestPermission()
         }
-        return LongLat(lon, lat)
     }
 
     private fun isLocationEnabled() : Boolean {
@@ -141,10 +146,10 @@ class MainActivity : ComponentActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(requestCode == PERMISSION_REQ_ACCESS_LOC){
             if(grantResults.isNotEmpty() && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, "Acess Granted", Toast.LENGTH_SHORT).show()
                 getCurLocation(viewModel = viewModel, key)
             }else{
-                Toast.makeText(applicationContext, "Denied!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, "Access Denied!", Toast.LENGTH_SHORT).show()
 
             }
 
@@ -152,13 +157,6 @@ class MainActivity : ComponentActivity() {
     }
 
 }
-
-
-
-
-//Holds value of location details
-data class Location(val title: String)
-data class LongLat(val long: Double, val lat: Double)
 
 @Composable
 fun MyApp(content: @Composable ()-> Unit){
@@ -173,14 +171,25 @@ fun MyApp(content: @Composable ()-> Unit){
 }
 
 @Composable
-fun ModelHolder(viewModel: OverviewViewModel){
-    val places : NearbyData? by viewModel.nearbyPlace.observeAsState()
-    val stat : TomTomStat? by viewModel.status.observeAsState()
-    NearbyDataHolder(modifier = Modifier.padding(8.dp), data = places, stat)
+fun ScreenContent(viewModel: OverviewViewModel){
+    Column {
+        TopAppBar{
+            Text(text = "Nearby", style = TextStyle(fontWeight = FontWeight.Bold), fontSize = 24.sp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        ModelHolder(viewModel = viewModel)
+    }
 }
 
 @Composable
-fun NearbyDataHolder(modifier: Modifier = Modifier, data : NearbyData?, status: TomTomStat?){
+fun ModelHolder(viewModel: OverviewViewModel){
+    val places : NearbyData? by viewModel.nearbyPlace.observeAsState()
+    val stat : TomTomStat? by viewModel.status.observeAsState()
+    NearbyDataHolder(data = places, stat)
+}
+
+@Composable
+fun NearbyDataHolder(data : NearbyData?, status: TomTomStat?){
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -215,19 +224,26 @@ fun ShowLoading(){
 }
 
 @Composable
-fun EachItem(place : Results){
+fun EachItem(place : Result){
     val mContext = LocalContext.current
+    Box(
+        Modifier
+            .padding(8.dp)
+            .clip(RoundedCornerShape(4.dp, 4.dp, 4.dp, 4.dp))
+            .border(BorderStroke(2.dp, MaterialTheme.colors.primary))
+            .fillMaxWidth()
+            .clickable {
+                val navigate = Intent(mContext, MainActivity2::class.java)
+                navigate.putExtra("score", place.score.toString())
+                navigate.putExtra("name", place.poi.name)
+                mContext.startActivity(navigate)
 
-    Box(Modifier.clickable {
-        val navigate = Intent(mContext, MainActivity2::class.java )
-        mContext.startActivity(navigate)
-
-    }) {
-
+            }
+            .clip(RoundedCornerShape(16.dp, 16.dp, 16.dp, 16.dp))) {
         Column(modifier = Modifier
-            .height(80.dp)
+            .height(56.dp)
             .padding(8.dp)) {
-            Text(place.poi.name)
+            Text(place.poi.name, overflow = TextOverflow.Ellipsis)
         }
 
     }
@@ -241,6 +257,8 @@ fun EachItem(place : Results){
 @Composable
 fun DefaultPreview() {
     MyApp{
-        ModelHolder(viewModel = OverviewViewModel())
+        TopAppBar{
+            Text(text = "Places Near You", style = TextStyle(fontWeight = FontWeight.Bold), fontSize = 32.sp)
+        }
     }
 }
