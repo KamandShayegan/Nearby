@@ -1,20 +1,15 @@
 
 ## Nearby Project
 
-#### _Application flow:_
-
-* After the application is launched, it gets the users permission to access location
-* On access granted, location (meaning longitude and latitude) are given to TomToms nearby API
-* Request is sent in order to fetch nearby points of interest
-* If data is correctly fetched, it will be displayed on the screen
-* On click, user will be transfered to another screen, showing little more information about that place
+### About
+This application allows users to discover nearby points of interest based on their location. Upon launch, it requests permission to access the user’s location. With access granted, it sends the coordinates to TomTom’s Nearby API to fetch relevant places. The results are displayed on the screen, and users can click on any point of interest to view additional details on a separate screen.
  
 #### _Exceptions:_
 * On access denied, users location can't be fetched, thus the application flow stops here with a toast notification, indicating that the access was not granted
 
 * On access granted, if anything was wrong with the api request, an ERROR text will be shown on the screen after the progress indicator
 
-#### _Tools, Libraries and Architecture:_
+### Tools, Libraries and Architecture:
 
 * MVVM architecture is applied, meaning Repository, ViewModel and View are fully separated
 * Intent
